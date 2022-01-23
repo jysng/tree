@@ -93,7 +93,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="TitanFunctions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\functions\TitanFunctions.dll</HintPath>
+      <HintPath>..\references\functions\TitanFunctions.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
