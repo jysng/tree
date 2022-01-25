@@ -51,7 +51,7 @@ namespace WebApplication2
             Response.Write(BaseTree);
             //GZipStream gZipStream;
             
-            ZipFile.ExtractToDirectory(@"C:\Users\Public\Documents\Bot_Manager\AT124\0.0.2\AT124.0.0.2.nupkg", @"C:\Users\Public\Documents\Bot_Manager\temp");
+            //ZipFile.ExtractToDirectory(@"C:\Users\Public\Documents\Bot_Manager\AT124\0.0.2\AT124.0.0.2.nupkg", @"C:\Users\Public\Documents\Bot_Manager\temp");
 
         }
 

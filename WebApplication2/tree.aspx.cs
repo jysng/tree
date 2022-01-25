@@ -8,90 +8,128 @@ using System.Web.UI.WebControls;
 using System.Data;
 using static TitanFunctions.DataLayer;
 using AngleSharp.Dom;
+using System.Text;
 
 namespace WebApplication2
 {
     public partial class tree : Page
     {
         //page load
-        protected async void Page_Load(object sender, EventArgs e)
+        protected void Page_Load(object sender, EventArgs e)
         {
-            //tree
-            var config = Configuration.Default;
+            #region comment
+            //DataTable dataTable = GetDataTableFromSQL("select * from tree");
+            //List<Node> nodes = new List<Node>();
+            //foreach (DataRow item in dataTable.Rows)
+            //{
+            //    Node node = new Node
+            //    {
+            //        Id = (int)item["Id"],
+            //        ParentId = (int)item["ParentId"],
+            //        HumanName = item["HumanName"].ToString()
+            //    };
+            //    nodes.Add(node);
+            //}
 
-            var context = BrowsingContext.New(config);
+            //var hierarchy = nodes
+            //                    .Where(c => c.ParentId == 0)
+            //                 .Select(c => new Node()
+            //                 {
+            //                     Id = c.Id,
 
-            var source = "<div class='container'><div class='row'><div class='tree'></div></div>";
+            //                     ParentId = c.ParentId,
+            //             //hierarchy = "0000" + c.Id,
+            //             Children = GetChildren(nodes, c.Id)
+            //                 })
+            //                 .ToList();
 
-            var document = await context.OpenAsync(req => req.Content(source));
+            //HieararchyWalk(hierarchy); 
+            #endregion
+            string nTree = WriteList();
+            string BaseTree = $"<div class='container'><div class='row'><div class='tree'>{nTree}</div></div>";
+            Response.Write(BaseTree);
+        }
 
-            var treeDiv = document.GetElementsByClassName("tree")[0];
-            DataTable dt = GetDataTableFromSQL("SELECT * FROM TREE --WHERE PARENTID IN(0,1)");
-            IElement pr =null;
-            IElement cr =null;
-            string lastParent = "";
-
-            foreach (DataRow item in dt.Rows)
+        protected string WriteList()
+        {
+            DataTable dataTable = GetDataTableFromSQL("select * from tree");
+            List<Node> tasks = new List<Node>();
+            foreach (DataRow item in dataTable.Rows)
             {
-                if (item["parentid"].ToString() == "0")
-                { pr = CreateChild(document, item["HumanName"].ToString());  }
-                if (lastParent != item["ParentId"].ToString())
+                Node node = new Node
                 {
-                    DataTable dtc = GetDataTableFromSQL($"SELECT * FROM TREE Where ParentId={item["ParentId"]} and Parentid<>0");
-                    if (dtc.Rows.Count >= 1)
-                    {
-                        IElement ul = document.CreateElement("ul");
-                        foreach (DataRow p in dtc.Rows)
-                        {
-                            
-                            lastParent = item["ParentId"].ToString();
-                            cr = CreateLi(document, p["HumanName"].ToString());
-                            ul.AppendChild(cr);
-                            pr.Children[0].Append((ul));
-                            //cr.AppendChild(cr);
-                        }
-                    }
-                    //if (cr != null)
-                        //pr.AppendChild(cr);
+                    Id = (int)item["Id"],
+                    ParentId = (int)item["ParentId"],
+                    HumanName = item["HumanName"].ToString(),
+                    ProfilePicture= item["ProfilePicURL"].ToString()
+
+                };
+                tasks.Add(node);
+            }
+            var s = new StringBuilder();
+
+            s.Append("<ul>");
+            foreach (var task in tasks)
+            {
+                if (task.ParentId == 0)
+                {
+                    WriteTaskList(tasks, task, s);
                 }
-                
-                
+            }
+            s.Append("</ul>");
+
+            return s.ToString();
+        }
+
+        private static void WriteTaskList(List<Node> tasks, Node task, StringBuilder s)
+        {
+            s.Append($"<li><a href='#'><img src='{task.ProfilePicture}'><span>{task.HumanName}</span></a>");
+
+            var subtasks = tasks.Where(p => p.ParentId == task.Id);
+
+            if (subtasks.Count() > 0)
+            {
+                s.Append("<ul>");
+                foreach (Node p in subtasks)
+                {
+                    if (tasks.Count(x => x.ParentId == p.Id) > 0)
+                        WriteTaskList(tasks, p, s);
+                    else
+                        s.Append($"<li> <a href='#'><img src='{p.ProfilePicture}'><span>{p.HumanName}</span></a></li>");
+                }
+                s.Append("</ul>");
             }
 
-            treeDiv.AppendChild(pr);
-            //Console.WriteLine("Serializing the document again:");
-            Response.Write(document.DocumentElement.OuterHtml);
+            s.Append("</li>");
+        }
+        #region Hide
+        public List<Node> GetChildren(List<Node> comments, int parentId)
+        {
+            return comments
+                    .Where(c => c.ParentId == parentId)
+                    .Select(c => new Node
+                    {
+                        Id = c.Id,
+                        //HumanName = c.HumanName,
+                        ParentId = c.ParentId,
+                        //hierarchy = "0000" + comments.Where(a => a.Id == parentId).FirstOrDefault().Id + ".0000" + c.Id,
+                        Children = GetChildren(comments, c.Id)
+                    })
+                    .ToList();
+        }
+        private object GetName(int parentId)
+        {
+            return GetSingleValue($"Select HumanName From Tree Where Id={parentId}");
         }
 
-        private static IElement CreateChild(IDocument document,string HumanName)
+        public class Node
         {
-            var ul = document.CreateElement("ul");
-            var li = document.CreateElement("li");
-            var a = document.CreateElement("a");
-            var img = document.CreateElement("img");
-            img.SetAttribute("src", "content/images/1.jpg");
-            var span = document.CreateElement("span");
-            span.InnerHtml = HumanName;
-            li.AppendChild(a);
-            a.AppendChild(img);
-            a.AppendChild(span);
-            ul.AppendChild(li);
-            return ul;
+            public int Id { get; set; }
+            public int ParentId { get; set; }
+            public string HumanName { get; set; }
+            public string ProfilePicture { get; set; }
+            public List<Node> Children { get; set; }
         }
-
-        private static IElement CreateLi(IDocument document, string HumanName)
-        {
-            
-            var li = document.CreateElement("li");
-            var a = document.CreateElement("a");
-            var img = document.CreateElement("img");
-            img.SetAttribute("src", "content/images/1.jpg");
-            var span = document.CreateElement("span");
-            span.InnerHtml = HumanName;
-            li.AppendChild(a);
-            a.AppendChild(img);
-            a.AppendChild(span);
-            return li;   
-        }
+        #endregion
     }
 }
