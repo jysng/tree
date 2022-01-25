@@ -104,6 +104,13 @@
   <ItemGroup>
     <Content Include="content\css\style.css" />
     <Content Include="content\images\1.jpg" />
+    <Content Include="content\images\10.jpg" />
+    <Content Include="content\images\11.jpg" />
+    <Content Include="content\images\12.jpg" />
+    <Content Include="content\images\13.jpg" />
+    <Content Include="content\images\14.jpg" />
+    <Content Include="content\images\15.jpg" />
+    <Content Include="content\images\16.jpg" />
     <Content Include="content\images\2.jpg" />
     <Content Include="content\images\3.jpg" />
     <Content Include="content\images\4.jpg" />
